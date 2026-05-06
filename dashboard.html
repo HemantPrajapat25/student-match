@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — MentorMatch Orbit</title>
+  <meta name="description" content="Your personal MentorMatch Orbit dashboard."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles/global.css"/>
+  <link rel="stylesheet" href="styles/animations.css"/>
+  <link rel="stylesheet" href="styles/components.css"/>
+  <link rel="stylesheet" href="styles/dashboard.css"/>
+  <link rel="stylesheet" href="styles/chat.css"/>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- Chat Drawer -->
+<div id="chat-overlay" class="chat-overlay" aria-hidden="true"></div>
+<aside id="chat-drawer" class="chat-drawer" role="dialog" aria-modal="true" aria-label="Chat">
+  <div class="chat-header">
+    <button class="chat-close" id="chat-close-btn" aria-label="Close chat">←</button>
+    <div class="msg-avatar" id="chat-mentor-avatar" style="background:var(--deep-purple)">M</div>
+    <div class="chat-mentor-info">
+      <div class="chat-mentor-name" id="chat-mentor-name">Mentor</div>
+      <div class="chat-mentor-role" id="chat-mentor-role"></div>
+      <div class="chat-status-row">
+        <span class="status-dot status-online" id="chat-status-dot"></span>
+        <span style="font-size:.75rem;color:var(--stellar-muted)">Online</span>
+      </div>
+    </div>
+    <div class="chat-header-actions">
+      <button class="chat-clear-btn" id="chat-clear-btn" aria-label="Clear chat history">Clear</button>
+    </div>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chat-input" rows="1"
+      placeholder="Type a message… (Enter to send)" aria-label="Message input"></textarea>
+    <button class="chat-send-btn" id="chat-send-btn" aria-label="Send message">↗</button>
+  </div>
+</aside>
+
+<!-- Header -->
+<header class="site-header" role="banner">
+  <a href="index.html" class="logo">◎ Mentor<span>Match</span></a>
+  <nav class="site-nav" aria-label="Main navigation">
+    <a href="discover.html"  class="nav-link">Discover</a>
+    <a href="dashboard.html" class="nav-link active">Dashboard</a>
+    <div style="position:relative">
+      <button class="notif-bell" id="notif-bell" aria-label="Notifications" aria-haspopup="true">
+        🔔<span class="notif-count" id="notif-count" style="display:none">0</span>
+      </button>
+      <div class="notif-dropdown" id="notif-dropdown" role="menu">
+        <div class="notif-header">Notifications</div>
+        <div id="notif-list"><div style="padding:16px;color:var(--stellar-muted);font-size:.85rem">No new notifications</div></div>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-sm" id="logout-btn">Logout</button>
+  </nav>
+</header>
+
+<div class="page-wrapper">
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar" aria-label="Dashboard navigation">
+      <div class="sidebar-avatar-section" id="sidebar-avatar-section">
+        <div class="sidebar-avatar-wrapper">
+          <div class="avatar" id="sidebar-avatar" style="background:var(--deep-purple)">U</div>
+          <div class="orbit-ring" aria-hidden="true"></div>
+        </div>
+        <div class="sidebar-avatar-info">
+          <div class="sidebar-user-name" id="sidebar-name">Loading…</div>
+          <div class="sidebar-user-role" id="sidebar-role"></div>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav" role="list">
+        <li><a href="dashboard.html" class="sidebar-nav-item active" aria-current="page">
+          <span class="sidebar-nav-icon">🏠</span>
+          <span class="sidebar-label">Dashboard</span>
+        </a></li>
+        <li><a href="discover.html" class="sidebar-nav-item">
+          <span class="sidebar-nav-icon">🔭</span>
+          <span class="sidebar-label">Discover</span>
+        </a></li>
+        <li><button class="sidebar-nav-item w-full" id="sidebar-messages-btn" style="text-align:left">
+          <span class="sidebar-nav-icon">💬</span>
+          <span class="sidebar-label">Messages</span>
+          <span class="sidebar-nav-badge" id="sidebar-unread" style="display:none">0</span>
+        </button></li>
+        <li><button class="sidebar-nav-item w-full" id="sidebar-saved-btn" style="text-align:left">
+          <span class="sidebar-nav-icon">★</span>
+          <span class="sidebar-label">Saved Mentors</span>
+        </button></li>
+      </ul>
+
+      <!-- Availability toggle (mentor only) -->
+      <div id="avail-toggle-wrap" style="padding:0 16px 16px;display:none">
+        <div class="divider"></div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input" id="avail-toggle" checked/>
+          <span class="toggle-track"></span>
+          <span class="toggle-label sidebar-label">Available for Mentoring</span>
+        </label>
+      </div>
+
+      <button class="sidebar-collapse-btn" id="collapse-btn" aria-label="Collapse sidebar">
+        <span>◀</span><span class="sidebar-label"> Collapse</span>
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+      <!-- Welcome banner -->
+      <div class="welcome-banner" id="welcome-banner">
+        <div class="welcome-title">Welcome back, <span id="welcome-name">Explorer</span> 👋</div>
+        <div class="welcome-sub" id="welcome-sub">Here's your mission control.</div>
+        <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap">
+          <span class="badge badge-blue" id="online-badge">
+            🟢 <span id="online-mentor-count">…</span> mentors online
+          </span>
+          <span class="badge badge-green" id="match-badge" style="display:none">
+            🎯 <span id="match-count-badge">0</span> matches found
+          </span>
+        </div>
+      </div>
+
+      <!-- Profile Completion -->
+      <div class="completion-card" style="margin-bottom:var(--space-8)">
+        <div class="completion-header">
+          <h2 class="section-title" style="font-size:1rem">Profile Completion</h2>
+          <span class="completion-pct" id="completion-pct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="completion-bar" style="width:0%"></div></div>
+        <p style="font-size:.8rem;color:var(--stellar-muted);margin-top:8px" id="completion-hint"></p>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-grid" id="stats-grid" style="margin-bottom:var(--space-8)"></div>
+
+      <!-- Top Match Spotlight (student only) -->
+      <div id="top-match-section" style="margin-bottom:var(--space-8);display:none">
+        <div class="section-header">
+          <h2 class="section-title">⭐ Top Match</h2>
+          <a href="discover.html" class="btn btn-secondary btn-sm">View All →</a>
+        </div>
+        <div id="top-match-card"></div>
+      </div>
+
+      <!-- Mentor: pending requests (mentor only) -->
+      <div id="mentor-requests-section" style="margin-bottom:var(--space-8);display:none">
+        <div class="section-header">
+          <h2 class="section-title">📥 Connection Requests</h2>
+        </div>
+        <div id="mentor-requests-list"></div>
+      </div>
+
+      <!-- Saved Mentors -->
+      <div id="saved-section" style="margin-bottom:var(--space-8)">
+        <div class="section-header">
+          <h2 class="section-title">★ Saved Mentors</h2>
+          <a href="discover.html" class="btn btn-secondary btn-sm">Browse →</a>
+        </div>
+        <div class="saved-list" id="saved-list"></div>
+      </div>
+
+      <!-- Recent Messages -->
+      <div id="messages-section" style="margin-bottom:var(--space-8)">
+        <div class="section-header">
+          <h2 class="section-title">💬 Recent Messages</h2>
+        </div>
+        <div class="msg-preview-list" id="msg-preview-list"></div>
+      </div>
+
+      <!-- Profile editor -->
+      <div style="margin-bottom:var(--space-8)">
+        <div class="section-header">
+          <h2 class="section-title">👤 My Profile</h2>
+          <button class="btn btn-secondary btn-sm" id="edit-profile-btn">Edit</button>
+        </div>
+        <div class="glass" style="padding:var(--space-6)" id="profile-display"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+import { requireAuth, logout } from './js/auth.js';
+import { getCurrentUser, getUser, getUserList, getStudentMatches, getMentorMatches,
+         saveUser, countUnread } from './js/store.js';
+import { rankMentors, getLimitedMatchesWarning } from './js/matcher.js';
+import { createMentorCard, showToast, createEmptyState, animateCounter, updateNotifBell } from './js/ui.js';
+import { initChat } from './js/chat.js';
+import { init, checkUrlParams, startStatusCycle } from './js/main.js';
+import { initials, stringToColor, formatDate, timeAgo, isWithinDays } from './js/utils.js';
+
+const user = requireAuth('index.html');
+if (!user) throw new Error('Not authenticated');
+
+await init();
+checkUrlParams();
+initChat();
+
+const profile = user.profile ?? {};
+const isMentor = user.role === 'mentor';
+
+// ── Sidebar ──
+document.getElementById('sidebar-avatar').textContent = initials(profile.name ?? '');
+document.getElementById('sidebar-avatar').style.background = profile.avatarColor ?? stringToColor(user.email);
+document.getElementById('sidebar-name').textContent = profile.name ?? user.email;
+document.getElementById('sidebar-role').textContent = isMentor ? `${profile.role ?? ''} @ ${profile.company ?? ''}` : `Student · ${profile.field ?? ''}`;
+
+// Availability toggle (mentor)
+if (isMentor) {
+  document.getElementById('avail-toggle-wrap').style.display = 'block';
+  const tog = document.getElementById('avail-toggle');
+  tog.checked = profile.onlineStatus !== 'offline';
+  tog.addEventListener('change', () => {
+    profile.onlineStatus = tog.checked ? 'online' : 'offline';
+    user.profile = profile;
+    saveUser(user);
+    showToast('Status Updated', tog.checked ? 'You appear Online' : 'You appear Offline',
+      tog.checked ? 'success' : 'info');
+  });
+}
+
+// ── Welcome banner ──
+document.getElementById('welcome-name').textContent = (profile.name ?? 'Explorer').split(' ')[0];
+document.getElementById('welcome-sub').textContent = isMentor
+  ? 'Your mentoring command center.'
+  : 'Find your perfect mentor and launch your career.';
+
+// Online count
+const onlineCount = getUserList('mentor').filter(m => m.profile?.onlineStatus === 'online').length;
+document.getElementById('online-mentor-count').textContent = onlineCount;
+
+// ── Profile Completion ──
+function calcCompletion(u) {
+  const p = u.profile ?? {};
+  const fields = isMentor
+    ? ['name','role','company','expertise','bio','timezone','mentoringStyle']
+    : ['name','field','goals','skillsWanted','bio','timezone','preferredStyle'];
+  const filled = fields.filter(f => {
+    const v = p[f];
+    return Array.isArray(v) ? v.length > 0 : !!v;
+  }).length;
+  return Math.round((filled / fields.length) * 100);
+}
+const pct = calcCompletion(user);
+document.getElementById('completion-pct').textContent = pct + '%';
+document.getElementById('completion-bar').style.width = pct + '%';
+document.getElementById('completion-hint').textContent = pct < 100
+  ? `Complete your profile to improve match quality (${100-pct}% remaining).`
+  : 'Profile complete! 🎉';
+
+// ── Stats ──
+const statsGrid = document.getElementById('stats-grid');
+const mentors = getUserList('mentor');
+const matches = isMentor ? getMentorMatches(user.email) : getStudentMatches(user.email);
+const unread  = countUnread(user.email);
+
+const statsData = isMentor
+  ? [
+      { icon:'👥', num: matches.length,  label:'Active Connections', color:'blue' },
+      { icon:'💬', num: unread,           label:'Unread Messages',    color:'green' },
+      { icon:'⭐', num: profile.capacity ?? 0, label:'Mentor Capacity', color:'purple' },
+      { icon:'📅', num: profile.availabilityHrs ?? 0, label:'Hours / Week', color:'blue' },
+    ]
+  : [
+      { icon:'🔭', num: mentors.length,   label:'Mentors Available',  color:'blue' },
+      { icon:'🎯', num: matches.length,   label:'My Matches',         color:'green' },
+      { icon:'💬', num: unread,           label:'Unread Messages',    color:'purple' },
+      { icon:'★',  num: (profile.savedMentors ?? []).length, label:'Saved Mentors', color:'blue' },
+    ];
+
+for (const s of statsData) {
+  const card = document.createElement('div');
+  card.className = 'stat-card';
+  card.innerHTML = `
+    <div class="stat-icon" style="background:var(--${s.color === 'blue' ? 'nebula-blue' : s.color === 'green' ? 'aurora-green' : 'deep-purple'}-dim)">${s.icon}</div>
+    <div class="stat-number" id="stat-n-${s.label.replace(/\s/g,'')}">0</div>
+    <div class="stat-label">${s.label}</div>
+  `;
+  statsGrid.appendChild(card);
+  animateCounter(card.querySelector('.stat-number'), s.num);
+}
+
+// Match count badge
+if (!isMentor && matches.length > 0) {
+  document.getElementById('match-badge').style.display = '';
+  document.getElementById('match-count-badge').textContent = matches.length;
+}
+
+// ── Top Match (student) ──
+if (!isMentor) {
+  const ranked = rankMentors(user, mentors);
+  if (ranked.length > 0) {
+    document.getElementById('top-match-section').style.display = 'block';
+    const topCard = createMentorCard(ranked[0], ranked[0].match, user);
+    topCard.classList.add('spotlight-card');
+    document.getElementById('top-match-card').appendChild(topCard);
+    const warn = getLimitedMatchesWarning(ranked[0].match.score);
+    if (warn) showToast('Limited Matches', warn, 'warning', 7000);
+  }
+}
+
+// ── Mentor Requests (mentor) ──
+if (isMentor) {
+  document.getElementById('mentor-requests-section').style.display = 'block';
+  const reqList = document.getElementById('mentor-requests-list');
+  const myMatches = getMentorMatches(user.email);
+  if (myMatches.length === 0) {
+    reqList.appendChild(createEmptyState('No requests yet', 'Students will appear here when they connect.'));
+  } else {
+    myMatches.slice(0,5).forEach(m => {
+      const item = document.createElement('div');
+      item.className = 'saved-item';
+      item.innerHTML = `
+        <div class="avatar" style="background:var(--nebula-blue)">${initials(m.studentEmail)}</div>
+        <div class="saved-item-info">
+          <div class="saved-item-name">${m.studentEmail}</div>
+          <div class="saved-item-role">${timeAgo(m.initiatedAt)} · ${m.score}% match</div>
+        </div>
+        <span class="badge badge-${m.status==='active'?'green':'amber'}">${m.status}</span>
+      `;
+      reqList.appendChild(item);
+    });
+  }
+}
+
+// ── Saved Mentors ──
+const savedList = document.getElementById('saved-list');
+const savedEmails = profile.savedMentors ?? [];
+if (savedEmails.length === 0) {
+  savedList.appendChild(createEmptyState('No saved mentors yet', 'Bookmark mentors on the Discover page.'));
+} else {
+  savedEmails.forEach(email => {
+    const mentor = getUser(email);
+    if (!mentor) return;
+    const mp = mentor.profile ?? mentor;
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+    item.innerHTML = `
+      <div class="avatar" style="background:${mp.avatarColor ?? 'var(--nebula-blue)'}">${initials(mp.name)}</div>
+      <div class="saved-item-info">
+        <div class="saved-item-name">${mp.name}</div>
+        <div class="saved-item-role">${mp.role ?? ''} @ ${mp.company ?? ''}</div>
+      </div>
+      <button class="btn btn-primary btn-sm chat-saved-btn" data-email="${email}" aria-label="Message ${mp.name}">💬</button>
+    `;
+    item.querySelector('.chat-saved-btn').addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('openChat', { detail: { mentorEmail: email } }));
+    });
+    savedList.appendChild(item);
+  });
+}
+
+// ── Recent Messages ──
+const msgList = document.getElementById('msg-preview-list');
+const { read: storeRead } = (() => {
+  // Inline read since we need raw access
+  function read(key, fb = null) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch { return fb; }
+  }
+  return { read };
+})();
+const allThreads = storeRead('mm_messages', {});
+const userThreads = Object.entries(allThreads).filter(([tid]) => tid.includes(user.email.toLowerCase()));
+if (userThreads.length === 0) {
+  msgList.appendChild(createEmptyState('No messages yet', 'Send a message to a mentor to get started.'));
+} else {
+  userThreads.slice(0, 5).forEach(([tid, msgs]) => {
+    const last = msgs[msgs.length - 1];
+    if (!last) return;
+    const otherEmail = tid.replace(user.email.toLowerCase(), '').replace('__','');
+    const other = getUser(otherEmail);
+    const op = other?.profile ?? other ?? {};
+    const unreadCount = msgs.filter(m => m.senderEmail !== user.email && !m.read).length;
+    const item = document.createElement('div');
+    item.className = 'msg-preview-item';
+    item.innerHTML = `
+      <div class="avatar" style="background:${op.avatarColor ?? 'var(--deep-purple)'}">${initials(op.name ?? otherEmail)}</div>
+      <div class="msg-preview-text">
+        <div class="msg-preview-name">${op.name ?? otherEmail}${unreadCount ? `<span class="badge badge-red" style="margin-left:8px">${unreadCount}</span>` : ''}</div>
+        <div class="msg-preview-excerpt">${last.text ?? ''}</div>
+      </div>
+      <div class="msg-preview-time">${timeAgo(last.sentAt)}</div>
+    `;
+    item.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('openChat', { detail: { mentorEmail: otherEmail } }));
+    });
+    msgList.appendChild(item);
+  });
+}
+
+// ── Profile display (inline-editable) ──
+const profileDisplay = document.getElementById('profile-display');
+profileDisplay.innerHTML = `
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+    <div class="avatar avatar-lg" style="background:${profile.avatarColor ?? stringToColor(user.email)}">${initials(profile.name ?? '')}</div>
+    <div>
+      <div style="font-family:var(--font-heading);font-size:1.1rem;color:var(--stellar-white)">${profile.name ?? ''}</div>
+      <div style="font-size:.85rem;color:var(--stellar-muted)">${user.email}</div>
+      ${isWithinDays(user.updatedAt, 7) ? '<span class="badge badge-green" style="margin-top:4px">Active this week</span>' : ''}
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.9rem">
+    ${isMentor ? `
+      <div><span style="color:var(--stellar-muted)">Role:</span> <strong>${profile.role ?? '—'}</strong></div>
+      <div><span style="color:var(--stellar-muted)">Company:</span> <strong>${profile.company ?? '—'}</strong></div>
+      <div><span style="color:var(--stellar-muted)">Experience:</span> <strong>${profile.yearsExp ?? 0} years</strong></div>
+      <div><span style="color:var(--stellar-muted)">Capacity:</span> <strong>${profile.capacity ?? 0} mentees</strong></div>
+    ` : `
+      <div><span style="color:var(--stellar-muted)">Field:</span> <strong>${profile.field ?? '—'}</strong></div>
+      <div><span style="color:var(--stellar-muted)">Year:</span> <strong>${profile.year ?? '—'}</strong></div>
+      <div><span style="color:var(--stellar-muted)">Availability:</span> <strong>${profile.availabilityHrs ?? 0}h/week</strong></div>
+      <div><span style="color:var(--stellar-muted)">Style:</span> <strong>${profile.preferredStyle ?? '—'}</strong></div>
+    `}
+    <div style="grid-column:1/-1"><span style="color:var(--stellar-muted)">Timezone:</span> <strong>${profile.timezone ?? '—'}</strong></div>
+    <div style="grid-column:1/-1"><span style="color:var(--stellar-muted)">Bio:</span> <span style="color:var(--stellar-dim)">${profile.bio ?? '—'}</span></div>
+  </div>
+`;
+
+// Edit profile button → redirect to register pre-filled (simplified)
+document.getElementById('edit-profile-btn').addEventListener('click', () => {
+  showToast('Edit Profile', 'Inline editing coming in Phase 2. You can re-register to update.', 'info', 5000);
+});
+
+// ── Sidebar collapse ──
+document.getElementById('collapse-btn').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+// ── Notification bell ──
+document.getElementById('notif-bell').addEventListener('click', () => {
+  document.getElementById('notif-dropdown').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#notif-bell') && !e.target.closest('#notif-dropdown')) {
+    document.getElementById('notif-dropdown').classList.remove('open');
+  }
+});
+
+// ── Logout ──
+document.getElementById('logout-btn').addEventListener('click', () => logout());
+
+// ── Notification bell count ──
+updateNotifBell(countUnread(user.email));
+const unreadBadge = document.getElementById('sidebar-unread');
+if (unread > 0) { unreadBadge.style.display = 'flex'; unreadBadge.textContent = unread; }
+</script>
+</body>
+</html>

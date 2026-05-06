@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Control Center — MentorMatch Orbit</title>
+  <meta name="description" content="Admin dashboard for MentorMatch Orbit."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles/global.css"/>
+  <link rel="stylesheet" href="styles/animations.css"/>
+  <link rel="stylesheet" href="styles/components.css"/>
+  <link rel="stylesheet" href="styles/dashboard.css"/>
+  <style>
+    :root { --nebula-blue: #7c3aed; --nebula-blue-dim: rgba(124,58,237,0.15); --nebula-blue-glow: rgba(124,58,237,0.3); }
+    .admin-login-wrap {
+      min-height: 100vh; display: flex;
+      align-items: center; justify-content: center; padding: 24px;
+      background: radial-gradient(ellipse at 30% 40%, rgba(124,58,237,0.1) 0%, transparent 60%);
+    }
+    .admin-login-card {
+      width: 100%; max-width: 420px;
+      background: var(--glass-bg); backdrop-filter: blur(24px);
+      border: 1px solid var(--deep-purple-glow);
+      border-radius: var(--radius-2xl);
+      padding: 48px 40px;
+      box-shadow: var(--shadow-card), var(--shadow-glow-purple);
+      animation: scale-in 0.4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .admin-panel { display: none; }
+    .admin-panel.visible { display: block; }
+    .admin-header {
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(26,108,246,0.08));
+      border: 1px solid var(--deep-purple-glow);
+      border-radius: var(--radius-xl);
+      padding: 32px 40px;
+      margin-bottom: 32px;
+      position: relative; overflow: hidden;
+    }
+    .admin-header::before {
+      content: ''; position: absolute;
+      top: -50%; right: -10%; width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .tab-bar {
+      display: flex; gap: 4px;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 4px;
+      margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 20px; border-radius: var(--radius-md);
+      font-family: var(--font-heading); font-size: .8rem;
+      font-weight: 600; letter-spacing: .05em;
+      color: var(--stellar-muted); cursor: pointer;
+      transition: all var(--transition-fast); border: none; background: none;
+    }
+    .tab-btn.active {
+      background: var(--deep-purple); color: #fff;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fade-up 0.3s ease; }
+  </style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="toast-container" aria-live="polite"></div>
+<div id="confirm-overlay" class="confirm-overlay" role="dialog" aria-modal="true"></div>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen" class="admin-login-wrap">
+  <div class="admin-login-card" role="main">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:2.5rem;margin-bottom:12px">⚙️</div>
+      <h1 style="font-size:1.4rem;color:var(--stellar-white);margin-bottom:4px">Admin Control Center</h1>
+      <p style="font-size:.85rem;color:var(--stellar-muted)">MentorMatch Orbit — Restricted Access</p>
+    </div>
+    <div id="login-error" style="background:rgba(255,69,96,.1);border:1px solid rgba(255,69,96,.3);
+      border-radius:8px;padding:10px 14px;color:var(--danger-red);font-size:.85rem;
+      margin-bottom:16px;display:none" role="alert"></div>
+    <div class="form-group">
+      <label for="admin-email">Admin Email</label>
+      <input type="email" id="admin-email" value="admin@mentor.ai" autocomplete="username" aria-required="true"/>
+    </div>
+    <div class="form-group">
+      <label for="admin-pass">Password</label>
+      <input type="password" id="admin-pass" value="admin123" autocomplete="current-password" aria-required="true"/>
+    </div>
+    <button class="btn btn-purple w-full" id="admin-login-btn" style="margin-top:8px">
+      🔐 Enter Control Center
+    </button>
+    <div style="text-align:center;margin-top:16px">
+      <a href="index.html" style="font-size:.8rem;color:var(--stellar-muted)">← Back to landing</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="admin-panel" class="admin-panel" role="main">
+  <!-- Header -->
+  <header class="site-header" role="banner">
+    <a href="index.html" class="logo">◎ Mentor<span>Match</span></a>
+    <div style="display:flex;align-items:center;gap:8px;margin:0 auto">
+      <span class="badge badge-purple">⚙ ADMIN MODE</span>
+    </div>
+    <nav class="site-nav">
+      <button class="btn btn-secondary btn-sm" id="admin-refresh-btn">↻ Refresh</button>
+      <button class="btn btn-danger btn-sm" id="admin-logout-btn">Logout</button>
+    </nav>
+  </header>
+
+  <div class="page-wrapper">
+    <div id="main-content" class="container" style="padding-top:40px;padding-bottom:60px">
+
+      <!-- Admin banner -->
+      <div class="admin-header">
+        <h1 style="font-family:var(--font-heading);font-size:1.8rem;color:var(--stellar-white);margin-bottom:8px">
+          ⚙ Admin Control Center
+        </h1>
+        <p style="color:var(--stellar-dim)">Manage users, view matches, and export platform data.</p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stats-grid" style="margin-bottom:32px">
+        <div class="stat-card"><div class="stat-icon" style="background:var(--deep-purple-dim)">👥</div>
+          <div class="stat-number" id="stat-total-users">0</div><div class="stat-label">Total Users</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--nebula-blue-dim)">🎓</div>
+          <div class="stat-number" id="stat-total-students">0</div><div class="stat-label">Students</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--aurora-green-dim)">🚀</div>
+          <div class="stat-number" id="stat-total-mentors">0</div><div class="stat-label">Mentors</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--deep-purple-dim)">🎯</div>
+          <div class="stat-number" id="stat-total-matches">0</div><div class="stat-label">Total Matches</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--nebula-blue-dim)">💬</div>
+          <div class="stat-number" id="stat-total-msgs">0</div><div class="stat-label">Messages Sent</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--aurora-green-dim)">✅</div>
+          <div class="stat-number" id="stat-active-users">0</div><div class="stat-label">Active Users</div></div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar" role="tablist">
+        <button class="tab-btn active" data-tab="users" role="tab" aria-selected="true">👥 Users</button>
+        <button class="tab-btn" data-tab="matches" role="tab" aria-selected="false">🎯 Match Log</button>
+        <button class="tab-btn" data-tab="export" role="tab" aria-selected="false">📦 Export</button>
+      </div>
+
+      <!-- Tab: Users -->
+      <div class="tab-panel active" id="tab-users" role="tabpanel">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <input type="search" id="admin-search" placeholder="Search by name or email…"
+            style="max-width:320px;flex:1" aria-label="Search users"/>
+          <span style="font-size:.85rem;color:var(--stellar-muted)" id="user-count-label"></span>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table" id="admin-table" aria-label="Users table">
+            <thead>
+              <tr>
+                <th data-col="name">Name <span class="sort-arrow">↕</span></th>
+                <th data-col="role">Role <span class="sort-arrow">↕</span></th>
+                <th data-col="email">Email <span class="sort-arrow">↕</span></th>
+                <th data-col="createdAt">Joined <span class="sort-arrow">↕</span></th>
+                <th data-col="status">Status <span class="sort-arrow">↕</span></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Match Log -->
+      <div class="tab-panel" id="tab-matches" role="tabpanel">
+        <h2 class="section-title" style="margin-bottom:16px">Match Log</h2>
+        <div id="match-log"></div>
+      </div>
+
+      <!-- Tab: Export -->
+      <div class="tab-panel" id="tab-export" role="tabpanel">
+        <div class="glass" style="padding:40px;text-align:center;max-width:480px;margin:0 auto">
+          <div style="font-size:3rem;margin-bottom:16px">📦</div>
+          <h2 style="font-family:var(--font-heading);font-size:1.2rem;color:var(--stellar-white);margin-bottom:8px">Export Platform Data</h2>
+          <p style="font-size:.9rem;color:var(--stellar-dim);margin-bottom:24px">Download all users, matches, and messages as a JSON file.</p>
+          <button class="btn btn-purple" id="export-btn">⬇ Download JSON Export</button>
+          <p style="font-size:.75rem;color:var(--stellar-muted);margin-top:16px">Includes: users, matches, messages, exportedAt timestamp</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { adminLogin, isAdmin, logout } from './js/auth.js';
+import { seedDemoData } from './js/store.js';
+import { initAdmin } from './js/admin.js';
+import { showToast } from './js/ui.js';
+
+await seedDemoData();
+
+// ── Login ──
+const loginScreen = document.getElementById('login-screen');
+const adminPanel  = document.getElementById('admin-panel');
+
+function showPanel() {
+  loginScreen.style.display = 'none';
+  adminPanel.classList.add('visible');
+  initAdmin();
+}
+
+// Already logged in as admin?
+if (isAdmin()) showPanel();
+
+document.getElementById('admin-login-btn').addEventListener('click', () => {
+  const email = document.getElementById('admin-email').value.trim();
+  const pass  = document.getElementById('admin-pass').value.trim();
+  const errEl = document.getElementById('login-error');
+  if (adminLogin(email, pass)) {
+    errEl.style.display = 'none';
+    showToast('Welcome, Admin', 'Control center unlocked.', 'success');
+    showPanel();
+  } else {
+    errEl.textContent = 'Invalid credentials. Use admin@mentor.ai / admin123';
+    errEl.style.display = 'block';
+  }
+});
+
+// Enter key on password
+document.getElementById('admin-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('admin-login-btn').click();
+});
+
+// ── Tabs ──
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+
+// ── Admin actions ──
+document.getElementById('admin-logout-btn')?.addEventListener('click', () => logout());
+document.getElementById('admin-refresh-btn')?.addEventListener('click', () => {
+  if (isAdmin()) initAdmin();
+  showToast('Refreshed', 'Data reloaded.', 'info');
+});
+</script>
+</body>
+</html>

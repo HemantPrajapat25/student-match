@@ -1,0 +1,330 @@
+/* ═══════════════════════════════════════════════════════════════
+   animations.css — ANTIGRAVITY Keyframes & Motion System
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────
+   FLOAT / LEVITATION
+   ───────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-10px) rotate(1deg); }
+  66%       { transform: translateY(-5px) rotate(-1deg); }
+}
+
+.float        { animation: float       4s ease-in-out infinite; }
+.float-slow   { animation: float-slow  6s ease-in-out infinite; }
+.float-fast   { animation: float-fast  3s ease-in-out infinite; }
+
+/* ─────────────────────────────────────
+   ORBITAL RING SPIN
+   ───────────────────────────────────── */
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes orbit-reverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+
+@keyframes orbit-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.orbit-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--nebula-blue);
+  border-right-color: var(--aurora-green);
+  animation: orbit 8s linear infinite;
+  pointer-events: none;
+}
+
+.orbit-ring-2 {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-bottom-color: var(--deep-purple);
+  border-left-color: var(--nebula-blue);
+  animation: orbit-reverse 12s linear infinite;
+  pointer-events: none;
+}
+
+.orbit-ring-purple {
+  border-top-color: var(--deep-purple);
+  border-right-color: var(--nebula-blue);
+}
+
+/* ─────────────────────────────────────
+   PULSE GLOW
+   ───────────────────────────────────── */
+@keyframes pulse-glow-blue {
+  0%, 100% { box-shadow: 0 0 10px var(--nebula-blue-dim); }
+  50%       { box-shadow: 0 0 30px var(--nebula-blue-glow), 0 0 60px var(--nebula-blue-dim); }
+}
+
+@keyframes pulse-glow-green {
+  0%, 100% { box-shadow: 0 0 10px var(--aurora-green-dim); }
+  50%       { box-shadow: 0 0 30px var(--aurora-green-glow), 0 0 60px var(--aurora-green-dim); }
+}
+
+@keyframes pulse-glow-purple {
+  0%, 100% { box-shadow: 0 0 10px var(--deep-purple-dim); }
+  50%       { box-shadow: 0 0 30px var(--deep-purple-glow), 0 0 60px var(--deep-purple-dim); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.4); }
+}
+
+.pulse-blue   { animation: pulse-glow-blue   3s ease-in-out infinite; }
+.pulse-green  { animation: pulse-glow-green  3s ease-in-out infinite; }
+.pulse-purple { animation: pulse-glow-purple 3s ease-in-out infinite; }
+.pulse-dot    { animation: pulse-dot 1.5s ease-in-out infinite; }
+
+/* ─────────────────────────────────────
+   WARP SPEED LOADING BAR
+   ───────────────────────────────────── */
+@keyframes warp {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.warp-bar {
+  overflow: hidden;
+  position: relative;
+  height: 3px;
+  background: var(--glass-border);
+  border-radius: var(--radius-full);
+}
+.warp-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--nebula-blue), var(--aurora-green), transparent);
+  animation: warp 1.5s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────
+   STAR DRIFT (CSS fallback)
+   ───────────────────────────────────── */
+@keyframes star-drift {
+  from { transform: translateY(0); opacity: 0.8; }
+  to   { transform: translateY(100vh); opacity: 0; }
+}
+
+/* ─────────────────────────────────────
+   FADE IN / SLIDE IN
+   ───────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slide-out-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.fade-in    { animation: fade-in    var(--transition-base) ease forwards; }
+.fade-up    { animation: fade-up    0.4s ease forwards; }
+.fade-down  { animation: fade-down  0.4s ease forwards; }
+.scale-in   { animation: scale-in   0.3s var(--transition-bounce) forwards; }
+
+/* ─────────────────────────────────────
+   ZERO-GRAVITY BOUNCE ON CLICK
+   ───────────────────────────────────── */
+@keyframes gravity-bounce {
+  0%   { transform: scale(1) translateY(0); }
+  30%  { transform: scale(0.95) translateY(2px); }
+  60%  { transform: scale(1.05) translateY(-4px); }
+  80%  { transform: scale(0.98) translateY(1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.gravity-bounce {
+  animation: gravity-bounce 0.4s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ─────────────────────────────────────
+   CARD FLOAT ANIMATION (staggered)
+   ───────────────────────────────────── */
+.mentor-card {
+  animation: fade-up 0.5s ease forwards;
+  animation-fill-mode: both;
+}
+.mentor-card:nth-child(1)  { animation-delay: 0.05s; }
+.mentor-card:nth-child(2)  { animation-delay: 0.1s; }
+.mentor-card:nth-child(3)  { animation-delay: 0.15s; }
+.mentor-card:nth-child(4)  { animation-delay: 0.2s; }
+.mentor-card:nth-child(5)  { animation-delay: 0.25s; }
+.mentor-card:nth-child(6)  { animation-delay: 0.3s; }
+
+/* ─────────────────────────────────────
+   SVG SCORE RING ANIMATION
+   ───────────────────────────────────── */
+@keyframes draw-ring {
+  from { stroke-dashoffset: 251; }
+  /* to value set dynamically via JS */
+}
+
+.score-ring-path {
+  animation: draw-ring 1.2s cubic-bezier(.4,0,.2,1) forwards;
+  animation-delay: 0.3s;
+}
+
+/* ─────────────────────────────────────
+   TOAST ANIMATIONS
+   ───────────────────────────────────── */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(100%) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(100%) scale(0.9); }
+}
+
+.toast-enter { animation: toast-in  0.35s cubic-bezier(.34,1.56,.64,1) forwards; }
+.toast-exit  { animation: toast-out 0.25s ease forwards; }
+
+/* ─────────────────────────────────────
+   NEBULA BACKGROUND SHIMMER
+   ───────────────────────────────────── */
+@keyframes nebula-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.nebula-bg {
+  background: linear-gradient(135deg,
+    var(--void-black) 0%,
+    #0a1628 30%,
+    #0d1a3a 60%,
+    var(--void-black) 100%
+  );
+  background-size: 400% 400%;
+  animation: nebula-shift 15s ease infinite;
+}
+
+/* ─────────────────────────────────────
+   STEP INDICATOR (registration)
+   ───────────────────────────────────── */
+@keyframes step-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--nebula-blue-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 8px var(--nebula-blue-dim);
+  }
+}
+
+.step-dot.active {
+  animation: step-pulse 2s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────
+   UNREAD MESSAGE DOT (red pulse)
+   ───────────────────────────────────── */
+@keyframes unread-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255,69,96,0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255,69,96,0);
+    transform: scale(1.1);
+  }
+}
+
+.unread-dot {
+  width: 10px; height: 10px;
+  background: var(--danger-red);
+  border-radius: 50%;
+  position: absolute;
+  top: -3px; right: -3px;
+  animation: unread-pulse 1.5s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────
+   FORM STEP TRANSITIONS
+   ───────────────────────────────────── */
+@keyframes step-slide-in {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes step-slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-40px); }
+}
+
+.step-active {
+  animation: step-slide-in 0.35s cubic-bezier(.4,0,.2,1) forwards;
+}
+
+/* ─────────────────────────────────────
+   HOVER REPEL (set by JS, CSS handles transition)
+   ───────────────────────────────────── */
+.repel-card {
+  transition: transform 0.2s cubic-bezier(.4,0,.2,1),
+              box-shadow 0.2s cubic-bezier(.4,0,.2,1);
+  will-change: transform;
+}
+
+/* ─────────────────────────────────────
+   AVAILABILITY BADGE PULSE
+   ───────────────────────────────────── */
+@keyframes avail-glow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+.avail-active {
+  animation: avail-glow 2s ease-in-out infinite;
+}

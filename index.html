@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MentorMatch Orbit — Find Your Gravity</title>
+  <meta name="description" content="AI-driven mentorship matching for students. Find your perfect mentor across the void with ANTIGRAVITY matching technology."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles/global.css"/>
+  <link rel="stylesheet" href="styles/animations.css"/>
+  <link rel="stylesheet" href="styles/components.css"/>
+  <style>
+    /* Landing-page specific */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-8) var(--space-6);
+      overflow: hidden;
+    }
+    #particle-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: var(--nebula-blue-dim);
+      border: 1px solid var(--nebula-blue-glow);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--nebula-blue);
+      font-family: var(--font-heading);
+      margin-bottom: var(--space-6);
+      animation: fade-down 0.6s ease forwards;
+    }
+    .hero-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 900;
+      line-height: 1.1;
+      color: var(--stellar-white);
+      margin-bottom: var(--space-6);
+      animation: fade-up 0.7s ease 0.1s both;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, var(--nebula-blue), var(--aurora-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: var(--text-xl);
+      color: var(--stellar-dim);
+      margin-bottom: var(--space-10);
+      line-height: 1.6;
+      animation: fade-up 0.7s ease 0.2s both;
+    }
+    .hero-cta {
+      display: flex;
+      gap: var(--space-5);
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fade-up 0.7s ease 0.35s both;
+    }
+    .cta-card {
+      width: 220px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8) var(--space-6);
+      cursor: pointer;
+      transition: all var(--transition-bounce);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-card:hover {
+      transform: translateY(-12px) scale(1.04);
+      box-shadow: var(--shadow-card-hover);
+    }
+    .cta-card.student { border-color: var(--aurora-green-glow); }
+    .cta-card.mentor  { border-color: var(--nebula-blue-glow); }
+    .cta-card.student:hover { box-shadow: var(--shadow-glow-green); }
+    .cta-card.mentor:hover  { box-shadow: var(--shadow-glow-blue); }
+    .cta-icon {
+      font-size: 3rem;
+      animation: float 4s ease-in-out infinite;
+    }
+    .cta-card.mentor .cta-icon { animation-delay: 0.5s; }
+    .cta-label {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--stellar-white);
+    }
+    .cta-sublabel {
+      font-size: var(--text-sm);
+      color: var(--stellar-muted);
+      text-align: center;
+    }
+    .cta-arrow {
+      font-size: 1.2rem;
+      transition: transform var(--transition-bounce);
+    }
+    .cta-card:hover .cta-arrow { transform: translateX(4px); }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      gap: var(--space-8);
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: var(--space-12);
+      animation: fade-up 0.7s ease 0.5s both;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-num {
+      font-family: var(--font-heading);
+      font-size: var(--text-3xl);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--nebula-blue), var(--aurora-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-desc {
+      font-size: var(--text-sm);
+      color: var(--stellar-muted);
+    }
+    .stats-divider {
+      width: 1px;
+      background: var(--glass-border);
+      align-self: stretch;
+    }
+
+    /* Admin link */
+    .admin-link {
+      position: fixed;
+      bottom: var(--space-6);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: var(--text-xs);
+      color: var(--stellar-muted);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+      z-index: 10;
+    }
+    .admin-link:hover { color: var(--deep-purple); }
+
+    /* Nebula orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 600px; height: 600px;
+      top: -200px; right: -200px;
+      background: radial-gradient(circle, rgba(26,108,246,0.12), transparent 70%);
+    }
+    .orb-2 {
+      width: 500px; height: 500px;
+      bottom: -150px; left: -150px;
+      background: radial-gradient(circle, rgba(0,245,160,0.08), transparent 70%);
+    }
+    .orb-3 {
+      width: 400px; height: 400px;
+      top: 40%; left: 40%;
+      background: radial-gradient(circle, rgba(124,58,237,0.06), transparent 70%);
+    }
+
+    /* Header login link */
+    .header-login {
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      color: var(--stellar-dim);
+      font-size: var(--text-sm);
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+    .header-login:hover {
+      color: var(--stellar-white);
+      border-color: var(--nebula-blue);
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Particle Canvas -->
+  <canvas id="particle-canvas" aria-hidden="true"></canvas>
+
+  <!-- Nebula orbs -->
+  <div class="orb orb-1" aria-hidden="true"></div>
+  <div class="orb orb-2" aria-hidden="true"></div>
+  <div class="orb orb-3" aria-hidden="true"></div>
+
+  <!-- Header -->
+  <header class="site-header" role="banner">
+    <a href="index.html" class="logo" aria-label="MentorMatch Orbit home">
+      ◎ Mentor<span>Match</span>
+    </a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="discover.html"  class="nav-link">Discover</a>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="register.html"  class="btn btn-primary btn-sm">Get Started</a>
+    </nav>
+  </header>
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Hero -->
+  <main id="main-content" class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span>🛸</span>
+        <span>ANTIGRAVITY MATCHING ENGINE v2.0</span>
+      </div>
+
+      <h1 class="hero-title">
+        Find Your<br/><span>Gravity</span>
+      </h1>
+
+      <p class="hero-sub">
+        AI matches students with mentors across the void.<br/>
+        Zero bias. Maximum signal. Real connections.
+      </p>
+
+      <!-- CTA Cards -->
+      <div class="hero-cta" role="navigation" aria-label="Get started">
+        <a href="register.html?role=student" class="cta-card student float"
+           aria-label="Register as a student">
+          <div class="cta-icon">🎓</div>
+          <div class="cta-label">I'm a Student</div>
+          <div class="cta-sublabel">Find a mentor who matches your goals</div>
+          <div class="cta-arrow">→</div>
+        </a>
+        <a href="register.html?role=mentor" class="cta-card mentor float"
+           aria-label="Register as a mentor">
+          <div class="cta-icon">🚀</div>
+          <div class="cta-label">I'm a Mentor</div>
+          <div class="cta-sublabel">Share your expertise, guide the next gen</div>
+          <div class="cta-arrow">→</div>
+        </a>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar" aria-label="Platform statistics">
+        <div class="stat-item">
+          <div class="stat-num" id="landing-mentors">2,400+</div>
+          <div class="stat-desc">Expert Mentors</div>
+        </div>
+        <div class="stats-divider" aria-hidden="true"></div>
+        <div class="stat-item">
+          <div class="stat-num">18K+</div>
+          <div class="stat-desc">Matches Made</div>
+        </div>
+        <div class="stats-divider" aria-hidden="true"></div>
+        <div class="stat-item">
+          <div class="stat-num">94%</div>
+          <div class="stat-desc">Satisfaction Rate</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Admin link -->
+  <a href="admin.html" class="admin-link" aria-label="Admin control center">⚙ Admin Login ↗</a>
+
+  <script type="module">
+    import { initParticles } from './js/particles.js';
+    import { init, checkUrlParams } from './js/main.js';
+    import { seedDemoData } from './js/store.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await seedDemoData();
+      initParticles('particle-canvas');
+      await init();
+      checkUrlParams();
+
+      // CTA click bounce effect
+      document.querySelectorAll('.cta-card').forEach(card => {
+        card.addEventListener('click', () => {
+          card.style.animation = 'none';
+          card.offsetWidth;
+          card.style.animation = 'gravity-bounce 0.4s cubic-bezier(.34,1.56,.64,1)';
+        });
+      });
+    });
+  </script>
+</body>
+</html>

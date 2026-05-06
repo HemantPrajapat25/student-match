@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register — MentorMatch Orbit</title>
+  <meta name="description" content="Create your student or mentor profile on MentorMatch Orbit."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles/global.css"/>
+  <link rel="stylesheet" href="styles/animations.css"/>
+  <link rel="stylesheet" href="styles/components.css"/>
+  <style>
+    body { background: var(--void-black); }
+    .reg-bg {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 20% 50%, rgba(26,108,246,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 20%, rgba(124,58,237,0.06) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
+    }
+    .reg-wrap {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: var(--space-8) var(--space-4);
+    }
+    .reg-card {
+      width: 100%; max-width: 560px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-10) var(--space-8);
+      box-shadow: var(--shadow-card);
+      animation: scale-in 0.4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .reg-logo {
+      font-family: var(--font-heading);
+      font-size: var(--text-lg);
+      color: var(--stellar-white);
+      text-align: center;
+      margin-bottom: var(--space-8);
+      letter-spacing: 0.1em;
+    }
+    .reg-logo span { color: var(--nebula-blue); }
+
+    /* Step indicator */
+    .step-indicator {
+      display: flex; align-items: center; justify-content: center;
+      gap: var(--space-3); margin-bottom: var(--space-8);
+    }
+    .step-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading);
+      font-size: var(--text-xs); font-weight: 700;
+      border: 2px solid var(--glass-border);
+      color: var(--stellar-muted);
+      background: var(--glass-bg);
+      transition: all var(--transition-bounce);
+      position: relative; z-index: 1;
+    }
+    .step-dot.done {
+      background: var(--aurora-green); border-color: var(--aurora-green);
+      color: var(--void-black);
+    }
+    .step-dot.active {
+      border-color: var(--nebula-blue); color: var(--nebula-blue);
+      background: var(--nebula-blue-dim);
+      box-shadow: 0 0 0 4px var(--nebula-blue-dim);
+    }
+    .step-line {
+      flex: 1; height: 2px; background: var(--glass-border);
+      border-radius: var(--radius-full); max-width: 60px;
+      transition: background var(--transition-base);
+    }
+    .step-line.done { background: var(--aurora-green); }
+
+    /* Role toggle */
+    .role-toggle {
+      display: flex; gap: 0; margin-bottom: var(--space-6);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .role-btn {
+      flex: 1; padding: var(--space-3);
+      font-family: var(--font-heading); font-size: var(--text-sm);
+      font-weight: 600; letter-spacing: 0.05em;
+      border: none; background: transparent;
+      color: var(--stellar-muted); cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .role-btn.active {
+      background: var(--nebula-blue); color: #fff;
+    }
+
+    /* Multi-select tag chips */
+    .tag-grid {
+      display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2);
+    }
+    .tag-chip {
+      padding: 5px 12px;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-full); font-size: var(--text-xs);
+      color: var(--stellar-dim); cursor: pointer; user-select: none;
+      transition: all var(--transition-fast);
+    }
+    .tag-chip:hover { border-color: var(--nebula-blue); color: var(--nebula-blue); }
+    .tag-chip.selected {
+      background: var(--nebula-blue-dim); border-color: var(--nebula-blue);
+      color: var(--nebula-blue);
+    }
+    .tag-chip.selected::before { content: '✓ '; }
+
+    /* Step panels */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; animation: step-slide-in 0.35s ease; }
+
+    /* Nav buttons */
+    .reg-nav {
+      display: flex; gap: var(--space-3); margin-top: var(--space-6);
+    }
+    .step-error-msg {
+      background: rgba(255,69,96,0.1); border: 1px solid rgba(255,69,96,0.3);
+      border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+      color: var(--danger-red); font-size: var(--text-sm); margin-bottom: var(--space-4);
+      display: none;
+    }
+    .step-error-msg.visible { display: block; animation: fade-up 0.3s ease; }
+
+    /* Custom select */
+    select {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--stellar-white);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      width: 100%;
+      appearance: none;
+      cursor: pointer;
+    }
+    select:focus {
+      outline: none;
+      border-color: var(--nebula-blue);
+      box-shadow: 0 0 0 3px var(--nebula-blue-dim);
+    }
+
+    /* Skills input */
+    .skills-input-wrap {
+      display: flex; gap: var(--space-2); align-items: center;
+    }
+    .skills-tags {
+      display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2);
+    }
+    .skill-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; background: var(--aurora-green-dim);
+      border: 1px solid var(--aurora-green-glow); border-radius: var(--radius-full);
+      font-size: var(--text-xs); color: var(--aurora-green);
+    }
+    .skill-tag button {
+      color: var(--aurora-green); font-size: 14px; line-height: 1;
+      opacity: 0.7; transition: opacity var(--transition-fast);
+    }
+    .skill-tag button:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <div class="reg-bg" aria-hidden="true"></div>
+  <div id="toast-container" aria-live="polite"></div>
+
+  <main id="main-content" class="reg-wrap">
+    <div class="reg-card" role="main">
+      <div class="reg-logo">◎ Mentor<span>Match</span> Orbit</div>
+
+      <!-- Role toggle -->
+      <div class="role-toggle" role="group" aria-label="Select role">
+        <button class="role-btn active" id="role-student" aria-pressed="true">🎓 Student</button>
+        <button class="role-btn" id="role-mentor" aria-pressed="false">🚀 Mentor</button>
+      </div>
+
+      <!-- Step indicator -->
+      <div class="step-indicator" aria-label="Registration progress">
+        <div class="step-dot active" id="dot-1" aria-current="step">1</div>
+        <div class="step-line" id="line-1"></div>
+        <div class="step-dot" id="dot-2">2</div>
+        <div class="step-line" id="line-2"></div>
+        <div class="step-dot" id="dot-3">3</div>
+      </div>
+
+      <!-- Error area -->
+      <div class="step-error-msg" id="step-error" role="alert"></div>
+
+      <!-- ── STEP 1: Basic Info ── -->
+      <div class="step-panel active" id="step-1">
+        <div class="form-group">
+          <label for="input-name">Full Name *</label>
+          <input type="text" id="input-name" name="name" autocomplete="name"
+            placeholder="e.g. Alex Rivera" aria-required="true" required/>
+          <div class="form-error" id="err-name"></div>
+        </div>
+        <div class="form-group">
+          <label for="input-email">Email Address *</label>
+          <input type="email" id="input-email" name="email" autocomplete="email"
+            placeholder="you@university.edu" aria-required="true" required/>
+          <div class="form-error" id="err-email"></div>
+        </div>
+        <!-- Mentor extra: role + company -->
+        <div id="mentor-step1-extra" style="display:none">
+          <div class="form-group">
+            <label for="input-jobtitle">Job Title *</label>
+            <input type="text" id="input-jobtitle" placeholder="e.g. Senior ML Engineer"/>
+          </div>
+          <div class="form-group">
+            <label for="input-company">Company *</label>
+            <input type="text" id="input-company" placeholder="e.g. Google DeepMind"/>
+          </div>
+        </div>
+        <div class="reg-nav">
+          <a href="index.html" class="btn btn-secondary" style="flex:1">← Back</a>
+          <button class="btn btn-primary" id="next-1" style="flex:2">Next →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: Field & Goals ── -->
+      <div class="step-panel" id="step-2">
+        <!-- STUDENT view -->
+        <div id="student-step2">
+          <div class="form-group">
+            <label for="input-field">Field of Study *</label>
+            <select id="input-field" aria-required="true">
+              <option value="">Select your field…</option>
+              <option>Data Science</option><option>Machine Learning</option>
+              <option>Web Dev</option><option>UX Design</option>
+              <option>Product Management</option><option>Software Engineering</option>
+              <option>Cloud Computing</option><option>Cybersecurity</option>
+              <option>Business / Management</option><option>Research</option>
+              <option>Other</option>
+            </select>
+            <div class="form-error" id="err-field"></div>
+          </div>
+          <div class="form-group">
+            <label for="input-year">Academic Year</label>
+            <select id="input-year">
+              <option value="">Select year…</option>
+              <option>1st Year</option><option>2nd Year</option>
+              <option>3rd Year</option><option>4th Year</option>
+              <option>Postgrad</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Career Goals * <span style="color:var(--stellar-muted);font-size:.75rem">(select at least 2)</span></label>
+            <div class="tag-grid" id="goals-grid" role="group" aria-label="Career goals"></div>
+            <div class="form-error" id="err-goals"></div>
+          </div>
+          <div class="form-group">
+            <label>Skills I Want to Learn</label>
+            <div class="skills-input-wrap">
+              <input type="text" id="skill-input" placeholder="Type a skill + Enter" style="flex:1"/>
+              <button class="btn btn-secondary btn-sm" id="skill-add-btn">Add</button>
+            </div>
+            <div class="skills-tags" id="skills-tags"></div>
+          </div>
+        </div>
+
+        <!-- MENTOR view -->
+        <div id="mentor-step2" style="display:none">
+          <div class="form-group">
+            <label>Areas of Expertise * <span style="color:var(--stellar-muted);font-size:.75rem">(select at least 2)</span></label>
+            <div class="tag-grid" id="expertise-grid" role="group" aria-label="Expertise areas"></div>
+            <div class="form-error" id="err-expertise"></div>
+          </div>
+          <div class="form-group">
+            <label for="input-yrsexp">Years of Experience *</label>
+            <input type="number" id="input-yrsexp" min="1" max="40" placeholder="e.g. 5" aria-required="true"/>
+          </div>
+          <div class="form-group">
+            <label>Mentoring Styles Offered * <span style="color:var(--stellar-muted);font-size:.75rem">(select at least 1)</span></label>
+            <div class="tag-grid" id="mstyle-grid" role="group" aria-label="Mentoring styles"></div>
+            <div class="form-error" id="err-mstyle"></div>
+          </div>
+          <div class="form-group">
+            <label for="input-capacity">Max Simultaneous Mentees</label>
+            <input type="number" id="input-capacity" min="1" max="20" value="3" placeholder="3"/>
+          </div>
+        </div>
+
+        <div class="reg-nav">
+          <button class="btn btn-secondary" id="back-2" style="flex:1">← Back</button>
+          <button class="btn btn-primary"   id="next-2" style="flex:2">Next →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Availability & Bio ── -->
+      <div class="step-panel" id="step-3">
+        <div class="form-group">
+          <label for="input-tz">Timezone *</label>
+          <select id="input-tz" aria-required="true"><option value="">Select timezone…</option></select>
+          <div class="form-error" id="err-tz"></div>
+        </div>
+        <div class="form-group">
+          <label>Weekly Availability *</label>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px" role="radiogroup" aria-label="Weekly availability">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--stellar-dim)">
+              <input type="radio" name="avail" value="2"  style="accent-color:var(--nebula-blue);width:16px;height:16px"/> 1–2 hours / week
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--stellar-dim)">
+              <input type="radio" name="avail" value="5"  style="accent-color:var(--nebula-blue);width:16px;height:16px"/> 3–5 hours / week
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--stellar-dim)">
+              <input type="radio" name="avail" value="10" style="accent-color:var(--nebula-blue);width:16px;height:16px"/> 5+ hours / week
+            </label>
+          </div>
+          <div class="form-error" id="err-avail"></div>
+        </div>
+        <!-- Student only: preferred style -->
+        <div class="form-group" id="pref-style-group">
+          <label for="input-style">Preferred Mentoring Style *</label>
+          <select id="input-style" aria-required="true">
+            <option value="">Select style…</option>
+            <option value="1:1">1:1 Sessions</option>
+            <option value="async">Async (messages/email)</option>
+            <option value="project">Project-based</option>
+            <option value="group">Group sessions</option>
+          </select>
+          <div class="form-error" id="err-style"></div>
+        </div>
+        <div class="form-group">
+          <label for="input-bio">Short Bio * <span style="color:var(--stellar-muted);font-size:.75rem">(50–300 chars)</span></label>
+          <textarea id="input-bio" rows="4" placeholder="Tell mentors about yourself, your goals, and what you're excited to learn…" aria-required="true" style="resize:vertical"></textarea>
+          <div class="char-counter" id="bio-counter">0 / 300</div>
+          <div class="form-error" id="err-bio"></div>
+        </div>
+        <div class="reg-nav">
+          <button class="btn btn-secondary" id="back-3" style="flex:1">← Back</button>
+          <button class="btn btn-green" id="submit-btn" style="flex:2">🚀 Launch Profile!</button>
+        </div>
+      </div>
+
+    </div><!-- /reg-card -->
+  </main>
+
+  <script type="module">
+    import { TIMEZONES } from './js/utils.js';
+    import { validateEmail, validateText, validateMultiSelect, showFieldError, attachCharCounter } from './js/validation.js';
+    import { registerStudent, registerMentor } from './js/auth.js';
+    import { emailExists } from './js/store.js';
+    import { showToast } from './js/ui.js';
+    import { seedDemoData } from './js/store.js';
+
+    await seedDemoData();
+
+    // ── State ──
+    let role    = 'student';
+    let step    = 1;
+    const data  = {};
+    let selectedGoals    = [];
+    let skillsWanted     = [];
+    let selectedExpertise= [];
+    let selectedMStyles  = [];
+
+    const GOALS = ['ML Engineer','Product Manager','Research Scientist','Startup Founder',
+      'UX Designer','Data Analyst','Software Engineer','Cloud Architect',
+      'Cybersecurity Expert','Full-Stack Developer','AI Researcher'];
+    const EXPERTISE_OPTS = ['Machine Learning','Python','TensorFlow','Data Science','Web Dev',
+      'JavaScript','React','Node.js','UX Design','Figma','Product Management','Agile',
+      'System Design','Cloud Computing','Kubernetes','NLP','Research','Statistics',
+      'SQL','Startup Founder','Fundraising','Go-to-market','Business Strategy','DevOps'];
+    const MSTYLE_OPTS = ['1:1','async','project','group','flexible'];
+
+    // Pre-fill role from URL
+    const urlRole = new URLSearchParams(location.search).get('role');
+    if (urlRole === 'mentor') switchRole('mentor');
+
+    // ── Timezone populate ──
+    const tzSel = document.getElementById('input-tz');
+    TIMEZONES.forEach(tz => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = tz;
+      tzSel.appendChild(opt);
+    });
+
+    // ── Build chip grids ──
+    buildTagGrid('goals-grid', GOALS, selectedGoals);
+    buildTagGrid('expertise-grid', EXPERTISE_OPTS, selectedExpertise);
+    buildTagGrid('mstyle-grid', MSTYLE_OPTS, selectedMStyles);
+
+    function buildTagGrid(containerId, items, selectedArr) {
+      const grid = document.getElementById(containerId);
+      if (!grid) return;
+      grid.innerHTML = '';
+      items.forEach(item => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'tag-chip' + (selectedArr.includes(item) ? ' selected' : '');
+        chip.textContent = item;
+        chip.setAttribute('aria-pressed', selectedArr.includes(item));
+        chip.addEventListener('click', () => {
+          const idx = selectedArr.indexOf(item);
+          if (idx >= 0) { selectedArr.splice(idx, 1); chip.classList.remove('selected'); chip.setAttribute('aria-pressed','false'); }
+          else          { selectedArr.push(item);    chip.classList.add('selected');    chip.setAttribute('aria-pressed','true'); }
+        });
+        grid.appendChild(chip);
+      });
+    }
+
+    // ── Skills tag input ──
+    const skillInput  = document.getElementById('skill-input');
+    const skillAddBtn = document.getElementById('skill-add-btn');
+    const skillsTags  = document.getElementById('skills-tags');
+
+    function addSkill(val) {
+      const s = val.trim();
+      if (!s || skillsWanted.includes(s)) return;
+      skillsWanted.push(s);
+      renderSkillTags();
+    }
+    function renderSkillTags() {
+      if (!skillsTags) return;
+      skillsTags.innerHTML = '';
+      skillsWanted.forEach((sk, i) => {
+        const tag = document.createElement('span');
+        tag.className = 'skill-tag';
+        tag.innerHTML = `${sk}<button type="button" aria-label="Remove ${sk}">×</button>`;
+        tag.querySelector('button').addEventListener('click', () => {
+          skillsWanted.splice(i,1); renderSkillTags();
+        });
+        skillsTags.appendChild(tag);
+      });
+    }
+    skillAddBtn?.addEventListener('click', () => { addSkill(skillInput.value); skillInput.value = ''; });
+    skillInput?.addEventListener('keydown', e => { if (e.key==='Enter'){e.preventDefault(); addSkill(skillInput.value); skillInput.value='';} });
+
+    // ── Bio char counter ──
+    attachCharCounter(document.getElementById('input-bio'), 50, 300, document.getElementById('bio-counter'));
+
+    // ── Role toggle ──
+    document.getElementById('role-student').addEventListener('click', () => switchRole('student'));
+    document.getElementById('role-mentor').addEventListener('click',  () => switchRole('mentor'));
+
+    function switchRole(r) {
+      role = r;
+      document.getElementById('role-student').classList.toggle('active', r==='student');
+      document.getElementById('role-student').setAttribute('aria-pressed', r==='student');
+      document.getElementById('role-mentor').classList.toggle('active', r==='mentor');
+      document.getElementById('role-mentor').setAttribute('aria-pressed', r==='mentor');
+      document.getElementById('mentor-step1-extra').style.display = r==='mentor' ? 'block' : 'none';
+      document.getElementById('student-step2').style.display      = r==='student'? 'block' : 'none';
+      document.getElementById('mentor-step2').style.display       = r==='mentor' ? 'block' : 'none';
+      document.getElementById('pref-style-group').style.display   = r==='student'? 'block' : 'none';
+    }
+
+    // ── Step navigation ──
+    function showStep(n) {
+      document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`step-${n}`).classList.add('active');
+      const dots  = [1,2,3];
+      dots.forEach(i => {
+        const dot  = document.getElementById(`dot-${i}`);
+        const line = document.getElementById(`line-${i}`);
+        dot.className  = 'step-dot' + (i<n?' done': i===n?' active':'');
+        if (i < n) dot.textContent = '✓';
+        else if (i === n) dot.textContent = i;
+        else dot.textContent = i;
+        if (line) line.classList.toggle('done', i < n);
+      });
+      step = n;
+      clearError();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('step-error');
+      el.textContent = msg; el.classList.add('visible');
+    }
+    function clearError() {
+      const el = document.getElementById('step-error');
+      el.textContent = ''; el.classList.remove('visible');
+    }
+
+    // Next / Back buttons
+    document.getElementById('next-1')?.addEventListener('click', () => {
+      const name  = document.getElementById('input-name').value;
+      const email = document.getElementById('input-email').value;
+      const errs  = [];
+      const nv = validateText(name,'Name',2,80); if(!nv.valid) errs.push(nv.message);
+      const ev = validateEmail(email); if(!ev.valid) errs.push(ev.message);
+      else if(emailExists(email)) errs.push('This email is already registered.');
+      if(role==='mentor'){
+        if(!document.getElementById('input-jobtitle').value.trim()) errs.push('Job title is required.');
+        if(!document.getElementById('input-company').value.trim())  errs.push('Company is required.');
+      }
+      if(errs.length){ showError(errs[0]); return; }
+      data.name=name.trim(); data.email=email.trim().toLowerCase();
+      if(role==='mentor'){
+        data.jobTitle=document.getElementById('input-jobtitle').value.trim();
+        data.company =document.getElementById('input-company').value.trim();
+      }
+      showStep(2);
+    });
+
+    document.getElementById('back-2')?.addEventListener('click', () => showStep(1));
+    document.getElementById('next-2')?.addEventListener('click', () => {
+      const errs = [];
+      if(role==='student'){
+        data.field = document.getElementById('input-field').value;
+        data.year  = document.getElementById('input-year').value;
+        if(!data.field) errs.push('Please select a field of study.');
+        if(selectedGoals.length < 2) errs.push('Please select at least 2 career goals.');
+        data.goals = [...selectedGoals];
+        data.skillsWanted = [...skillsWanted];
+      } else {
+        if(selectedExpertise.length < 2) errs.push('Please select at least 2 expertise areas.');
+        const yrs = parseInt(document.getElementById('input-yrsexp').value);
+        if(!yrs || yrs < 1) errs.push('Years of experience is required.');
+        if(selectedMStyles.length < 1) errs.push('Please select at least 1 mentoring style.');
+        data.expertise     = [...selectedExpertise];
+        data.yearsExp      = yrs;
+        data.mentoringStyle= [...selectedMStyles];
+        data.capacity      = parseInt(document.getElementById('input-capacity').value)||3;
+      }
+      if(errs.length){ showError(errs[0]); return; }
+      showStep(3);
+    });
+
+    document.getElementById('back-3')?.addEventListener('click', () => showStep(2));
+    document.getElementById('submit-btn')?.addEventListener('click', async () => {
+      const tz    = document.getElementById('input-tz').value;
+      const avail = document.querySelector('input[name="avail"]:checked')?.value;
+      const bio   = document.getElementById('input-bio').value;
+      const style = document.getElementById('input-style')?.value;
+      const errs  = [];
+      if(!tz)   errs.push('Please select your timezone.');
+      if(!avail) errs.push('Please select your weekly availability.');
+      if(role==='student' && !style) errs.push('Please select a mentoring style preference.');
+      const bv = validateText(bio,'Bio',50,300); if(!bv.valid) errs.push(bv.message);
+      if(errs.length){ showError(errs[0]); return; }
+
+      data.timezone        = tz;
+      data.availabilityHrs = Number(avail);
+      data.bio             = bio;
+      if(role==='student') data.preferredStyle = style;
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true; btn.textContent = '⏳ Launching…';
+
+      let result;
+      if(role==='student') result = registerStudent(data);
+      else                 result = registerMentor(data);
+
+      if(result.success){
+        showToast('Profile Created! 🚀','Redirecting to your dashboard…','success',3000);
+        setTimeout(() => { window.location.href = 'dashboard.html?success=registered'; }, 1200);
+      } else {
+        showError(result.error || 'Registration failed. Please try again.');
+        btn.disabled = false; btn.textContent = '🚀 Launch Profile!';
+      }
+    });
+  </script>
+</body>
+</html>

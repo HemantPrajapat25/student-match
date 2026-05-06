@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Discover Mentors — MentorMatch Orbit</title>
+  <meta name="description" content="Find and connect with expert mentors matched to your career goals."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles/global.css"/>
+  <link rel="stylesheet" href="styles/animations.css"/>
+  <link rel="stylesheet" href="styles/components.css"/>
+  <link rel="stylesheet" href="styles/dashboard.css"/>
+  <link rel="stylesheet" href="styles/chat.css"/>
+  <style>
+    .filter-toggle-btn {
+      display: none;
+      align-items: center; gap: 8px;
+      padding: 8px 16px;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); color: var(--stellar-dim);
+      font-size: var(--text-sm); cursor: pointer; margin-bottom: 16px;
+    }
+    .filter-badge {
+      background: var(--nebula-blue); color: #fff;
+      border-radius: 50%; width: 18px; height: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+    .limited-warn {
+      background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--radius-lg); padding: 12px 16px;
+      color: var(--warning-amber); font-size: .85rem; margin-bottom: 20px;
+      display: none;
+    }
+    .load-more-btn {
+      display: block; margin: 32px auto 0;
+      padding: 12px 40px;
+    }
+    @media (max-width: 900px) {
+      .filter-toggle-btn { display: flex; }
+      .filter-sidebar { display: none; }
+      .filter-sidebar.mobile-open { display: flex; }
+    }
+  </style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- Chat Drawer -->
+<div id="chat-overlay" class="chat-overlay"></div>
+<aside id="chat-drawer" class="chat-drawer" role="dialog" aria-modal="true" aria-label="Chat">
+  <div class="chat-header">
+    <button class="chat-close" id="chat-close-btn" aria-label="Close chat">←</button>
+    <div class="msg-avatar" id="chat-mentor-avatar" style="background:var(--deep-purple)">M</div>
+    <div class="chat-mentor-info">
+      <div class="chat-mentor-name" id="chat-mentor-name">Mentor</div>
+      <div class="chat-mentor-role" id="chat-mentor-role"></div>
+      <div class="chat-status-row">
+        <span class="status-dot status-online" id="chat-status-dot"></span>
+      </div>
+    </div>
+    <div class="chat-header-actions">
+      <button class="chat-clear-btn" id="chat-clear-btn">Clear</button>
+    </div>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chat-input" rows="1" placeholder="Type a message…" aria-label="Message"></textarea>
+    <button class="chat-send-btn" id="chat-send-btn" aria-label="Send">↗</button>
+  </div>
+</aside>
+
+<!-- Header -->
+<header class="site-header" role="banner">
+  <a href="index.html" class="logo">◎ Mentor<span>Match</span></a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="discover.html"  class="nav-link active">Discover</a>
+    <a href="dashboard.html" class="nav-link">Dashboard</a>
+    <div style="position:relative">
+      <button class="notif-bell" id="notif-bell" aria-label="Notifications">
+        🔔<span class="notif-count" id="notif-count" style="display:none">0</span>
+      </button>
+    </div>
+    <button class="btn btn-secondary btn-sm" id="logout-btn">Logout</button>
+  </nav>
+</header>
+
+<div class="page-wrapper">
+  <div class="container" style="padding-top:32px;padding-bottom:48px">
+
+    <!-- Mobile filter toggle -->
+    <button class="filter-toggle-btn" id="filter-toggle-btn" aria-expanded="false">
+      🔧 Filters <span class="filter-badge" id="active-filter-count" style="display:none">0</span>
+    </button>
+
+    <div class="discover-layout">
+      <!-- ── Filter Sidebar ── -->
+      <aside class="filter-sidebar" id="filter-sidebar" aria-label="Filter mentors">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h2 style="font-family:var(--font-heading);font-size:1rem;color:var(--stellar-white)">Filters</h2>
+          <button class="btn btn-secondary btn-sm" id="reset-filters">Reset</button>
+        </div>
+
+        <!-- Min Compatibility -->
+        <div>
+          <div class="filter-group-title">Min Compatibility</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:.8rem;color:var(--stellar-muted)">0%</span>
+            <span class="compat-value" id="compat-val">0%</span>
+            <span style="font-size:.8rem;color:var(--stellar-muted)">100%</span>
+          </div>
+          <input type="range" class="compat-slider" id="compat-slider"
+            min="0" max="100" value="0" aria-label="Minimum compatibility percentage"
+            style="--val:0%"/>
+        </div>
+
+        <!-- Field -->
+        <div>
+          <div class="filter-group-title">Field</div>
+          <div class="filter-checkbox-list" id="field-filters">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Availability -->
+        <div>
+          <div class="filter-group-title">Availability</div>
+          <div class="filter-checkbox-list" id="avail-filters">
+            <label class="filter-checkbox-item"><input type="radio" name="avail-f" value="any" checked/> <span>Any</span></label>
+            <label class="filter-checkbox-item"><input type="radio" name="avail-f" value="1-2"/> <span>1–2 hrs/week</span></label>
+            <label class="filter-checkbox-item"><input type="radio" name="avail-f" value="3-5"/> <span>3–5 hrs/week</span></label>
+            <label class="filter-checkbox-item"><input type="radio" name="avail-f" value="5+"/> <span>5+ hrs/week</span></label>
+          </div>
+        </div>
+
+        <!-- Style -->
+        <div>
+          <div class="filter-group-title">Mentoring Style</div>
+          <div class="filter-checkbox-list">
+            <label class="filter-checkbox-item"><input type="radio" name="style-f" value="any" checked/> <span>Any</span></label>
+            <label class="filter-checkbox-item"><input type="radio" name="style-f" value="1:1"/> <span>1:1 Sessions</span></label>
+            <label class="filter-checkbox-item"><input type="radio" name="style-f" value="async"/> <span>Async</span></label>
+            <label class="filter-checkbox-item"><input type="radio" name="style-f" value="project"/> <span>Project-based</span></label>
+            <label class="filter-checkbox-item"><input type="radio" name="style-f" value="group"/> <span>Group</span></label>
+          </div>
+        </div>
+
+        <!-- Timezone -->
+        <div>
+          <div class="filter-group-title">Timezone</div>
+          <select id="tz-filter" aria-label="Filter by timezone" style="font-size:.85rem">
+            <option value="">Any timezone</option>
+          </select>
+        </div>
+      </aside>
+
+      <!-- ── Results ── -->
+      <main id="main-content">
+        <!-- Limited match warning -->
+        <div class="limited-warn" id="limited-warn" role="alert">
+          ⚠️ <span id="limited-warn-text"></span>
+        </div>
+
+        <!-- Sort bar -->
+        <div class="sort-bar" style="margin-bottom:24px">
+          <button class="sort-btn active" data-sort="score">🎯 Best Match</button>
+          <button class="sort-btn" data-sort="availability">📅 Most Available</button>
+          <button class="sort-btn" data-sort="recent">🕐 Recently Active</button>
+          <div class="results-count" aria-live="polite" id="results-count">
+            <span id="results-num">0</span> mentors found
+          </div>
+        </div>
+
+        <!-- Card grid -->
+        <div class="mentor-grid" id="mentor-grid" aria-label="Mentor cards"></div>
+
+        <!-- Load more -->
+        <button class="btn btn-secondary load-more-btn" id="load-more-btn" style="display:none">
+          Load More ↓
+        </button>
+      </main>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { seedDemoData, getUserList, getCurrentUser } from './js/store.js';
+import { rankMentors, filterMentors, sortMentors, getLimitedMatchesWarning } from './js/matcher.js';
+import { createMentorCard, createEmptyState, showToast, updateNotifBell } from './js/ui.js';
+import { initChat } from './js/chat.js';
+import { logout } from './js/auth.js';
+import { TIMEZONES, debounce } from './js/utils.js';
+import { init } from './js/main.js';
+import { countUnread } from './js/store.js';
+
+await seedDemoData();
+await init();
+initChat();
+
+const currentUser = getCurrentUser();
+
+// ── Populate timezone filter ──
+const tzSel = document.getElementById('tz-filter');
+TIMEZONES.forEach(tz => {
+  const opt = document.createElement('option');
+  opt.value = opt.textContent = tz;
+  tzSel.appendChild(opt);
+});
+
+// ── Populate field filter from mentor data ──
+const allMentors = getUserList('mentor');
+const allFields  = [...new Set(allMentors.flatMap(m => m.profile?.expertise?.slice(0,2) ?? []))].sort();
+const fieldContainer = document.getElementById('field-filters');
+allFields.slice(0, 12).forEach(f => {
+  const label = document.createElement('label');
+  label.className = 'filter-checkbox-item';
+  label.innerHTML = `<input type="checkbox" name="field-f" value="${f}"/> <span>${f}</span>`;
+  fieldContainer.appendChild(label);
+});
+
+// ── State ──
+let currentSort = 'score';
+let page        = 1;
+const PAGE_SIZE = 6;
+let rankedAll   = [];
+let filtered    = [];
+
+// ── Collect filters ──
+function getFilters() {
+  const fields = [...document.querySelectorAll('input[name="field-f"]:checked')].map(i => i.value);
+  const avail  = document.querySelector('input[name="avail-f"]:checked')?.value ?? 'any';
+  const style  = document.querySelector('input[name="style-f"]:checked')?.value ?? 'any';
+  const tz     = tzSel.value;
+  const minScore = parseInt(document.getElementById('compat-slider').value);
+  return { fields, availability: avail, style, timezone: tz, minScore };
+}
+
+function countActiveFilters(f) {
+  let n = 0;
+  if (f.fields.length)      n++;
+  if (f.availability !== 'any') n++;
+  if (f.style !== 'any')    n++;
+  if (f.timezone)           n++;
+  if (f.minScore > 0)       n++;
+  return n;
+}
+
+// ── Render ──
+function render() {
+  const filters  = getFilters();
+  const sorted   = sortMentors(rankedAll, currentSort);
+  filtered       = filterMentors(sorted, filters);
+  const toShow   = filtered.slice(0, page * PAGE_SIZE);
+  const grid     = document.getElementById('mentor-grid');
+  grid.innerHTML = '';
+
+  // Active filter badge
+  const n = countActiveFilters(filters);
+  const badge = document.getElementById('active-filter-count');
+  badge.textContent = n;
+  badge.style.display = n > 0 ? 'flex' : 'none';
+
+  // Results count
+  document.getElementById('results-num').textContent = filtered.length;
+
+  // Limited match warning
+  const topScore = filtered[0]?.match?.score ?? 0;
+  const warn = getLimitedMatchesWarning(topScore);
+  const warnEl = document.getElementById('limited-warn');
+  if (warn && currentUser) {
+    document.getElementById('limited-warn-text').textContent = warn;
+    warnEl.style.display = 'block';
+  } else {
+    warnEl.style.display = 'none';
+  }
+
+  if (filtered.length === 0) {
+    grid.appendChild(createEmptyState('No mentors found', 'Try adjusting your filters or expanding your profile.'));
+    document.getElementById('load-more-btn').style.display = 'none';
+    return;
+  }
+
+  toShow.forEach(mentor => {
+    const card = createMentorCard(mentor, mentor.match, currentUser);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('load-more-btn').style.display =
+    toShow.length < filtered.length ? 'block' : 'none';
+}
+
+// ── Initial rank ──
+function initialRank() {
+  if (currentUser && currentUser.role === 'student') {
+    rankedAll = rankMentors(currentUser, allMentors);
+  } else {
+    // Guest / mentor viewing: generate a mock student profile to demonstrate scoring
+    // instead of showing 0% for everyone.
+    const mockStudent = {
+      profile: {
+        field: 'Software Engineer',
+        goals: ['Startup Founder', 'Machine Learning'],
+        skillsWanted: ['Python', 'System Design', 'React'],
+        timezone: 'America/New_York',
+        preferredStyle: '1:1',
+        availabilityHrs: 5
+      }
+    };
+    rankedAll = rankMentors(mockStudent, allMentors);
+  }
+  page = 1;
+  render();
+}
+
+initialRank();
+
+// ── Reactive filters ──
+const debouncedRender = debounce(() => { page = 1; render(); }, 50);
+document.getElementById('filter-sidebar').addEventListener('change', debouncedRender);
+document.getElementById('compat-slider').addEventListener('input', (e) => {
+  const v = e.target.value;
+  document.getElementById('compat-val').textContent = v + '%';
+  e.target.style.setProperty('--val', v + '%');
+  debouncedRender();
+});
+
+// ── Sort ──
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSort = btn.dataset.sort;
+    page = 1;
+    render();
+  });
+});
+
+// ── Load more ──
+document.getElementById('load-more-btn').addEventListener('click', () => {
+  page++;
+  const grid = document.getElementById('mentor-grid');
+  const nextSlice = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  nextSlice.forEach(mentor => {
+    const card = createMentorCard(mentor, mentor.match, currentUser);
+    card.style.animation = 'fade-up 0.4s ease forwards';
+    grid.appendChild(card);
+  });
+  if (page * PAGE_SIZE >= filtered.length) {
+    document.getElementById('load-more-btn').style.display = 'none';
+  }
+});
+
+// ── Reset filters ──
+document.getElementById('reset-filters').addEventListener('click', () => {
+  document.querySelectorAll('input[name="field-f"]').forEach(i => i.checked = false);
+  document.querySelector('input[name="avail-f"][value="any"]').checked = true;
+  document.querySelector('input[name="style-f"][value="any"]').checked = true;
+  tzSel.value = '';
+  const slider = document.getElementById('compat-slider');
+  slider.value = 0;
+  slider.style.setProperty('--val', '0%');
+  document.getElementById('compat-val').textContent = '0%';
+  page = 1;
+  render();
+  showToast('Filters Reset', 'Showing all mentors.', 'info');
+});
+
+// ── Mobile filter toggle ──
+document.getElementById('filter-toggle-btn').addEventListener('click', () => {
+  const sidebar = document.getElementById('filter-sidebar');
+  const isOpen  = sidebar.classList.toggle('mobile-open');
+  document.getElementById('filter-toggle-btn').setAttribute('aria-expanded', isOpen);
+});
+
+// ── Logout ──
+document.getElementById('logout-btn').addEventListener('click', () => {
+  import('./js/auth.js').then(m => m.logout());
+});
+
+// ── Notification bell ──
+if (currentUser) updateNotifBell(countUnread(currentUser.email));
+</script>
+</body>
+</html>
