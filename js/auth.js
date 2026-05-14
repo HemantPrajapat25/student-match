@@ -110,10 +110,15 @@ export function registerMentor(formData) {
  * @param {string} email
  * @returns {{ success:boolean, user?:Object, error?:string }}
  */
-export function login(email) {
+export function login(email, password) {
   const user = getUser(email.trim().toLowerCase());
   if (!user) return { success: false, error: 'No account found with that email.' };
   if (user.status === 'inactive') return { success: false, error: 'This account has been deactivated.' };
+  
+  if (user.password && user.password !== password) {
+    return { success: false, error: 'Incorrect password.' };
+  }
+  
   setSession(user.email);
   if (user.role === 'admin') sessionStorage.setItem('mm_admin', '1');
   return { success: true, user };

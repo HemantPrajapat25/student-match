@@ -261,8 +261,29 @@ export function createMentorCard(mentor, matchData, student = null) {
   connectBtn.setAttribute('aria-label', `Send message to ${mp.name}`);
   connectBtn.addEventListener('click', () => {
     triggerAnimation(connectBtn, 'gravity-bounce');
-    // Chat drawer opened by chat.js listener
     document.dispatchEvent(new CustomEvent('openChat', { detail: { mentorEmail: mentor.email } }));
+  });
+
+  const requestBtn = document.createElement('button');
+  requestBtn.className = 'btn btn-green btn-sm';
+  requestBtn.innerHTML = '🔗 Connect';
+  requestBtn.setAttribute('aria-label', `Send connection request to ${mp.name}`);
+  requestBtn.addEventListener('click', () => {
+    if (!studentEmail) { showToast('Login required', 'Please log in to connect.', 'warning'); return; }
+    triggerAnimation(requestBtn, 'gravity-bounce');
+    import('./store.js').then(({ saveMatch, uuid }) => {
+      saveMatch({
+        id: uuid(),
+        studentEmail: studentEmail,
+        mentorEmail: mentor.email,
+        score: score,
+        status: 'pending',
+        initiatedAt: new Date().toISOString()
+      });
+      showToast('Request Sent', `Connection request sent to ${mp.name}`, 'success');
+      requestBtn.innerHTML = '✓ Pending';
+      requestBtn.disabled = true;
+    });
   });
 
   const profileBtn = document.createElement('button');
@@ -273,6 +294,7 @@ export function createMentorCard(mentor, matchData, student = null) {
     showMentorModal(mentor, matchData, student);
   });
 
+  actions.appendChild(requestBtn);
   actions.appendChild(connectBtn);
   actions.appendChild(profileBtn);
   card.appendChild(actions);

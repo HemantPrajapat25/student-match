@@ -316,12 +316,14 @@ if (isMentor) {
     reqList.appendChild(createEmptyState('No requests yet', 'Students will appear here when they connect.'));
   } else {
     myMatches.slice(0,5).forEach(m => {
+      const student = getUser(m.studentEmail);
+      const sp = student?.profile ?? { name: m.studentEmail, avatarColor: 'var(--nebula-blue)' };
       const item = document.createElement('div');
       item.className = 'saved-item';
       item.innerHTML = `
-        <div class="avatar" style="background:var(--nebula-blue)">${initials(m.studentEmail)}</div>
+        <div class="avatar" style="background:${sp.avatarColor}">${initials(sp.name)}</div>
         <div class="saved-item-info">
-          <div class="saved-item-name">${m.studentEmail}</div>
+          <div class="saved-item-name">${sp.name}</div>
           <div class="saved-item-role">${timeAgo(m.initiatedAt)} · ${m.score}% match</div>
         </div>
         <span class="badge badge-${m.status==='active'?'green':'amber'}">${m.status}</span>

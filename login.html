@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — MentorMatch Orbit</title>
+  <meta name="description" content="Login to your MentorMatch Orbit account."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles/global.css"/>
+  <link rel="stylesheet" href="styles/animations.css"/>
+  <link rel="stylesheet" href="styles/components.css"/>
+  <style>
+    :root { --nebula-blue: #7c3aed; --nebula-blue-dim: rgba(124,58,237,0.15); --nebula-blue-glow: rgba(124,58,237,0.3); }
+    .login-wrap {
+      min-height: 100vh; display: flex;
+      align-items: center; justify-content: center; padding: 24px;
+      background: radial-gradient(ellipse at 30% 40%, rgba(26,108,246,0.1) 0%, transparent 60%);
+    }
+    .login-card {
+      width: 100%; max-width: 420px;
+      background: var(--glass-bg); backdrop-filter: blur(24px);
+      border: 1px solid var(--nebula-blue-glow);
+      border-radius: var(--radius-2xl);
+      padding: 48px 40px;
+      box-shadow: var(--shadow-card), var(--shadow-glow-blue);
+      animation: scale-in 0.4s cubic-bezier(.34,1.56,.64,1);
+    }
+  </style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- ── LOGIN SCREEN ── -->
+<div class="login-wrap">
+  <div class="login-card" role="main">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:2.5rem;margin-bottom:12px">🚀</div>
+      <h1 style="font-size:1.4rem;color:var(--stellar-white);margin-bottom:4px">Welcome Back</h1>
+      <p style="font-size:.85rem;color:var(--stellar-muted)">Sign in to your MentorMatch Orbit account</p>
+    </div>
+    <div id="login-error" style="background:rgba(255,69,96,.1);border:1px solid rgba(255,69,96,.3);
+      border-radius:8px;padding:10px 14px;color:var(--danger-red);font-size:.85rem;
+      margin-bottom:16px;display:none" role="alert"></div>
+    <div class="form-group">
+      <label for="user-email">Email Address</label>
+      <input type="email" id="user-email" placeholder="you@example.com" autocomplete="username" aria-required="true"/>
+    </div>
+    <div class="form-group">
+      <label for="user-pass">Password</label>
+      <input type="password" id="user-pass" placeholder="Enter your password" autocomplete="current-password" aria-required="true"/>
+    </div>
+    <button class="btn btn-primary w-full" id="login-btn" style="margin-top:8px">
+      Sign In
+    </button>
+    <div style="text-align:center;margin-top:24px;display:flex;flex-direction:column;gap:12px;">
+      <a href="register.html" style="font-size:.85rem;color:var(--nebula-blue);font-weight:600">Don't have an account? Sign Up</a>
+      <a href="index.html" style="font-size:.8rem;color:var(--stellar-muted)">← Back to landing</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { login, requireAuth } from './js/auth.js';
+import { seedDemoData, getSession } from './js/store.js';
+import { showToast } from './js/ui.js';
+
+await seedDemoData();
+
+// If already logged in, go to dashboard
+if (getSession()) {
+  window.location.href = 'dashboard.html';
+}
+
+document.getElementById('login-btn').addEventListener('click', () => {
+  const email = document.getElementById('user-email').value.trim();
+  const pass  = document.getElementById('user-pass').value.trim();
+  const errEl = document.getElementById('login-error');
+  
+  if (!email) {
+    errEl.textContent = 'Please enter your email.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const result = login(email, pass);
+  if (result.success) {
+    errEl.style.display = 'none';
+    showToast('Welcome Back', 'Logging you in...', 'success', 2000);
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 1000);
+  } else {
+    errEl.textContent = result.error || 'Invalid email or password.';
+    errEl.style.display = 'block';
+  }
+});
+
+// Enter key on password
+document.getElementById('user-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+</script>
+</body>
+</html>
